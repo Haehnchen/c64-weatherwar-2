@@ -153,13 +153,14 @@ jobs:
           {
             echo "SDL_PREFIX=$sdl_prefix"
             echo "CMAKE_PREFIX_PATH=$(cygpath -m "$sdl_prefix")"
-            echo "PKG_CONFIG_PATH=$(cygpath -m "$sdl_prefix/lib/pkgconfig")"
           } >> "$GITHUB_ENV"
 
       - name: Check and build Weatherwar
         run: |
           set -euo pipefail
           export PATH="$SDL_PREFIX/bin:$PATH"
+          # MSYS2 resets PKG_CONFIG_PATH when each step's shell starts.
+          export PKG_CONFIG_PATH="$SDL_PREFIX/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
           make audio-setup
           make doctor
           SDL_VIDEODRIVER=dummy SDL_RENDER_DRIVER=software \

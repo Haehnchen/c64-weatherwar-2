@@ -63,7 +63,7 @@ add_tool_test(integration/native_regression check_regression.py
 set_tests_properties(integration/audio_transitions integration/native_regression
     PROPERTIES TIMEOUT 180)
 
-foreach(script IN ITEMS test_setup_audio test_check_scene_audio)
+foreach(script IN ITEMS test_setup_audio test_check_scene_audio test_package_linux)
     string(REGEX REPLACE "^test_" "" name "${script}")
     add_test(NAME "tools/${name}" COMMAND "${Python3_EXECUTABLE}"
         "${CMAKE_CURRENT_SOURCE_DIR}/tools/${script}.py")

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build a Linux archive containing Weatherwar and its ELF dependencies."""
+"""Bundle Weatherwar runtime libraries while retaining the host glibc."""
 
 from __future__ import annotations
 
@@ -20,8 +20,11 @@ _DEPENDENCY = re.compile(
 )
 _ABSOLUTE = re.compile(rf"^(?P<path>/[^\s]+)\s+{_ADDRESS}$")
 _PSEUDO = re.compile(rf"^(?:linux-vdso|linux-gate)[^\s/]*\s+{_ADDRESS}$")
-_INTERPRETER = re.compile(
-    r"Requesting program interpreter:\s*(?P<path>/[^\s\]]+)\]"
+# Desktop plugins and graphics drivers must use their host's glibc and loader.
+_HOST_GLIBC = re.compile(
+    r"^(?:ld-linux[^/]*|ld64\.so\.\d+|"
+    r"lib(?:c|m|mvec|pthread|dl|rt|resolv|util|anl|BrokenLocale|"
+    r"thread_db|nss_[^/]+)\.so(?:\.\d+)*)$"
 )
 
 
@@ -88,19 +91,6 @@ def _parse_ldd(output: str) -> tuple[dict[str, Path], list[Path]]:
     return dependencies, loaders
 
 
-def _readelf_interpreter(executable: Path) -> Path | None:
-    """Read the PT_INTERP path, if the executable has one."""
-    result = _run(["readelf", "-l", str(executable)], check=False)
-    if result.returncode:
-        return None
-    matches = _INTERPRETER.findall(result.stdout)
-    if len(matches) > 1:
-        raise PackagingError("readelf reported more than one ELF interpreter")
-    if not matches:
-        return None
-    return Path(matches[0])
-
-
 def _resolved_file(path: Path, description: str) -> Path:
     try:
         resolved = path.resolve(strict=True)
@@ -111,26 +101,13 @@ def _resolved_file(path: Path, description: str) -> Path:
     return resolved
 
 
-def _add_dependency(dependencies: dict[str, Path], soname: str, source: Path) -> None:
-    source = _resolved_file(source, f"library {soname!r}")
-    previous = dependencies.get(soname)
-    if previous is not None:
-        previous = _resolved_file(previous, f"library {soname!r}")
-        if previous != source:
-            raise PackagingError(
-                f"different libraries have the same SONAME {soname!r}: "
-                f"{previous} and {source}"
-            )
-    dependencies[soname] = source
-
-
-def _write_launcher(path: Path, loader_name: str) -> None:
+def _write_launcher(path: Path) -> None:
     path.write_text(
         "#!/bin/sh\n"
         "set -eu\n"
         'root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\n'
-        f'exec "$root/lib/{loader_name}" --inhibit-cache --library-path '
-        '"$root/lib" "$root/bin/weatherwar" "$@"\n',
+        'export LD_LIBRARY_PATH="$root/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"\n'
+        'exec "$root/bin/weatherwar" "$@"\n',
         encoding="utf-8",
     )
     path.chmod(0o755)
@@ -146,17 +123,11 @@ def _zip_tree(stage: Path, output: Path) -> None:
 def package(executable: Path, output: Path, strip_tool: str) -> None:
     executable = _resolved_file(executable, "executable")
     ldd = _run(["ldd", str(executable)])
-    dependencies, ldd_loaders = _parse_ldd(ldd.stdout)
-    interpreter = _readelf_interpreter(executable)
-    if interpreter is not None:
-        loader = interpreter
-    elif len(ldd_loaders) == 1:
-        loader = ldd_loaders[0]
-    else:
-        raise PackagingError("could not find one ELF interpreter in ldd or readelf output")
-    if not loader.is_absolute():
-        raise PackagingError(f"ELF interpreter is not an absolute path: {loader}")
-    _add_dependency(dependencies, loader.name, loader)
+    dependencies, _ = _parse_ldd(ldd.stdout)
+    dependencies = {
+        name: source for name, source in dependencies.items()
+        if not _HOST_GLIBC.fullmatch(name)
+    }
 
     with tempfile.TemporaryDirectory(prefix="weatherwar-linux-") as temporary:
         stage = Path(temporary)
@@ -173,7 +144,7 @@ def package(executable: Path, output: Path, strip_tool: str) -> None:
             destination = lib_dir / soname
             shutil.copy2(_resolved_file(source, f"library {soname!r}"), destination)
 
-        _write_launcher(stage / "weatherwar", loader.name)
+        _write_launcher(stage / "weatherwar")
         (stage / "README.txt").write_text(
             "Weatherwar II bundled Linux runtime\n"
             "\n"

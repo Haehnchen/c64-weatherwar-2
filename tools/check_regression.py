@@ -21,7 +21,11 @@ def main():
             subprocess.run([str(args.executable.resolve()), "--dump-" + scene, str(target)],
                            check=True, capture_output=True, timeout=120)
             # PCM dithering varies; separate audio checks validate signal integrity.
-            files = sorted(path for path in output.rglob("*") if path.is_file() and path.suffix != ".wav")
+            # Path ordering ignores case on Windows; keep the POSIX snapshot order.
+            files = sorted(
+                (path for path in output.rglob("*") if path.is_file() and path.suffix != ".wav"),
+                key=lambda path: path.relative_to(output).parts,
+            )
             digest = hashlib.sha256()
             for path in files:
                 digest.update(path.relative_to(output).as_posix().encode() + bytes([0]))

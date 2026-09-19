@@ -1,0 +1,58 @@
+{
+  "attack": {
+    "files": 556,
+    "sha256": "bb6fbccb7f2d6d177f70980b5a7e306dc7a2cbbff42d493fdd83eb0e8546f6bc"
+  },
+  "audio": {
+    "files": 1,
+    "sha256": "6b0dad97b7e5ad289816210f5c17cb46fe8ab46cd14914430df53794eca806e0"
+  },
+  "computer": {
+    "files": 89,
+    "sha256": "b5277379b65fbfccc950ca5000aae1cb4ab104a36e16839a0a359e3a23375195"
+  },
+  "human-sequence": {
+    "files": 1543,
+    "sha256": "4ddc7731eeff9aec621860be3201500146e5faf9ee7bd25231e7e89a93e9e9ab"
+  },
+  "match": {
+    "files": 1698,
+    "sha256": "3efb692c326686f800f55f35b776f433da96a88e4a1a2a608d488d458e0616a8"
+  },
+  "match-left": {
+    "files": 1890,
+    "sha256": "8d2ed715417896522244a8cc72888c2d3c6b7b1f838c88d1e8e28826518af46a"
+  },
+  "match-tie": {
+    "files": 796,
+    "sha256": "ab115989eac074cbef432c09b9aa5b6acdf154f392bebcb365d3bcfa445cf370"
+  },
+  "nature": {
+    "files": 588,
+    "sha256": "f419f74ed5e1af0a70a42c15af8d9ea4238e8f273075f898c3325b70a9027796"
+  },
+  "numeric": {
+    "files": 80,
+    "sha256": "0d64d773589df8a55e9e7bd2c740a0ddeabdae932f8f08cdb40d61a80aa78b7b"
+  },
+  "opening": {
+    "files": 25,
+    "sha256": "566777ad330b14235ee5ce8f38ddd2c025b9fe33144b2cded1fac177e7f67823"
+  },
+  "setup": {
+    "files": 20,
+    "sha256": "85714c5833b29be6c9b15df3821a7de640a00bce6053bf06c3e7c8a4d09dd3a8"
+  },
+  "setup-audio": {
+    "files": 4,
+    "sha256": "1ace240ac885d0b747353106752b0b7b16fb094ccaf96e0539e2179366b60ba7"
+  },
+  "turn": {
+    "files": 117,
+    "sha256": "171bcac6ec3a5e8a37f3bbbcf1b53dece23c2b9dbbcc7f1467b1fdef8d1b2a5c"
+  },
+  "turn-audio": {
+    "files": 1,
+    "sha256": "a4224025cccea58b11a6c8f7309eabddd59c785e87671e83b5515c167fc76c37"
+  }
+}

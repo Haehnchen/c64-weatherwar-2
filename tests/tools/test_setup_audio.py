@@ -100,8 +100,8 @@ class SetupAudioTests(unittest.TestCase):
 
     def test_clone_preserves_pristine_revision(self):
         target = self.root / "clone"
-        self.assertEqual(SETUP.clone_local(self.source, target, self.revision), target)
-        self.assertEqual(SETUP.verify_source(target, self.revision), target)
+        self.assertEqual(SETUP.clone_local(self.source, target, self.revision), target.resolve())
+        self.assertEqual(SETUP.verify_source(target, self.revision), target.resolve())
         self.assertEqual(git(self.source, "status", "--porcelain"), "")
 
     def test_wrong_revision_is_rejected(self):

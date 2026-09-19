@@ -19,12 +19,23 @@ def git(directory, *args):
 
 class SetupAudioTests(unittest.TestCase):
     def test_windows_commands_use_msys_shell_with_separate_arguments(self):
+        bash = "C:/msys64/usr/bin/bash.exe"
         with patch.object(SETUP.sys, "platform", "win32"), \
+             patch.object(SETUP.shutil, "which", return_value=bash) as which, \
              patch.object(SETUP.subprocess, "run") as run:
             SETUP.run(["configure", "--prefix=C:/a path/with $characters"], cwd=ROOT)
+        which.assert_called_once_with("bash")
         run.assert_called_once_with(
-            ["bash", "-c", 'exec "$@"', "bash", "configure",
+            [bash, "-c", 'exec "$@"', "bash", "configure",
              "--prefix=C:/a path/with $characters"], cwd=ROOT, check=True)
+
+    def test_windows_missing_shell_does_not_fall_back_to_wsl(self):
+        with patch.object(SETUP.sys, "platform", "win32"), \
+             patch.object(SETUP.shutil, "which", return_value=None), \
+             patch.object(SETUP.subprocess, "run") as run:
+            with self.assertRaisesRegex(RuntimeError, "MSYS2 bash is required"):
+                SETUP.run(["git", "--version"])
+        run.assert_not_called()
 
     def test_windows_configure_paths_use_cygpath(self):
         with patch.object(SETUP.sys, "platform", "win32"), \

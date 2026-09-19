@@ -22,7 +22,11 @@ REVISION = "7c54a5988f9f1918439ee1180316a78c7a7729bb"
 def run(args: Sequence[Union[str, Path]], cwd: Path = ROOT) -> None:
     command = [arg.as_posix() if isinstance(arg, Path) else str(arg) for arg in args]
     if sys.platform == "win32":
-        command = ["bash", "-c", 'exec "$@"', "bash", *command]
+        # Resolve PATH first so Windows cannot prefer its System32 WSL launcher.
+        bash = shutil.which("bash")
+        if bash is None:
+            raise RuntimeError("MSYS2 bash is required on PATH for the SID build")
+        command = [bash, "-c", 'exec "$@"', "bash", *command]
     subprocess.run(command, cwd=cwd, check=True)
 
 

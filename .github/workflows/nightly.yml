@@ -100,6 +100,8 @@ jobs:
     env:
       CC: gcc
       CXX: g++
+      # Keep the POSIX path list intact across native Python and MSYS2 Autotools.
+      MSYS2_ENV_CONV_EXCL: ACLOCAL_PATH
       SDL3_COMMIT: 683181b47cfabd293e3ea409f838915b8297a4fd
     steps:
       - name: Configure checkout line endings
@@ -269,7 +271,7 @@ jobs:
           retention-days: 1
 
   release:
-    if: github.ref == 'refs/heads/main'
+    if: ${{ !cancelled() && github.ref == 'refs/heads/main' }}
     needs: [build-linux, build-windows, build-macos]
     runs-on: ubuntu-24.04
     permissions:
@@ -283,15 +285,27 @@ jobs:
           merge-multiple: true
 
       - name: Verify release archives
+        id: archives
         run: |
           set -euo pipefail
-          test -s dist/weatherwar-Linux-x86_64.zip
-          test -s dist/weatherwar-Linux-x86_64-bundled.zip
-          test -s dist/weatherwar-Windows-x86_64-bundled.zip
-          test -s dist/weatherwar-macOS-arm64-bundled.zip
-          test -s dist/weatherwar-macOS-x86_64-bundled.zip
+          shopt -s nullglob
+          mkdir -p verified
+          count=0
+          for archive in dist/weatherwar-*.zip; do
+            if unzip -tq "$archive"; then
+              cp "$archive" verified/
+              count=$((count + 1))
+            else
+              echo "::warning::Skipping invalid release archive: $archive"
+            fi
+          done
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+          if (( count == 0 )); then
+            echo "::warning::No valid release archives; skipping publication."
+          fi
 
       - name: Publish rolling nightly release
+        if: steps.archives.outputs.count != '0'
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -314,4 +328,4 @@ jobs:
             gh release create "$tag" --verify-tag \
               --title "Nightly build" --notes "$notes" --prerelease
           fi
-          gh release upload "$tag" dist/*.zip --clobber
+          gh release upload "$tag" verified/*.zip --clobber

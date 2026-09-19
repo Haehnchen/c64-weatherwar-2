@@ -110,6 +110,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
             --strip "${CMAKE_STRIP}")
 elseif(WIN32)
     set(_weatherwar_windows_stage "${CMAKE_BINARY_DIR}/_weatherwar_windows_stage")
+    get_filename_component(_weatherwar_windows_runtime_dir "${CMAKE_CXX_COMPILER}" DIRECTORY)
     list(APPEND _weatherwar_bundle_commands
         COMMAND "${CMAKE_COMMAND}" -E rm -rf "${_weatherwar_windows_stage}"
         COMMAND "${CMAKE_COMMAND}" -E make_directory "${_weatherwar_windows_stage}"
@@ -121,6 +122,7 @@ elseif(WIN32)
             "-DWEATHERWAR_OUTPUT=${WEATHERWAR_RELEASE_DIR}/${_weatherwar_release_name}-bundled.zip"
             "-DWEATHERWAR_STRIP=${CMAKE_STRIP}"
             "-DWEATHERWAR_OBJDUMP=${CMAKE_OBJDUMP}"
+            "-DWEATHERWAR_RUNTIME_DIR=${_weatherwar_windows_runtime_dir}"
             -P "${PROJECT_SOURCE_DIR}/cmake/BundleWindows.cmake")
 elseif(APPLE)
     set(_weatherwar_macos_stage "${CMAKE_BINARY_DIR}/_weatherwar_macos_stage")

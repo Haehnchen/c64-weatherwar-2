@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.20)
 
+if(POLICY CMP0207)
+    cmake_policy(SET CMP0207 NEW)
+endif()
+
 if(DEFINED WEATHERWAR_OBJDUMP AND NOT "${WEATHERWAR_OBJDUMP}" STREQUAL ""
    AND NOT WEATHERWAR_OBJDUMP MATCHES "-NOTFOUND$")
     set(CMAKE_OBJDUMP "${WEATHERWAR_OBJDUMP}")
@@ -13,7 +17,7 @@ if(DEFINED WEATHERWAR_OBJDUMP AND NOT "${WEATHERWAR_OBJDUMP}" STREQUAL ""
 endif()
 
 foreach(_weatherwar_required
-        WEATHERWAR_EXECUTABLE WEATHERWAR_STAGE WEATHERWAR_OUTPUT)
+        WEATHERWAR_EXECUTABLE WEATHERWAR_STAGE WEATHERWAR_OUTPUT WEATHERWAR_RUNTIME_DIR)
     if(NOT DEFINED ${_weatherwar_required} OR
        "${${_weatherwar_required}}" STREQUAL "")
         message(FATAL_ERROR "${_weatherwar_required} is required")
@@ -43,6 +47,7 @@ endif()
 # found by the dependency walker is copied beside weatherwar.exe.
 file(GET_RUNTIME_DEPENDENCIES
     EXECUTABLES "${WEATHERWAR_EXECUTABLE}"
+    DIRECTORIES "${WEATHERWAR_RUNTIME_DIR}"
     RESOLVED_DEPENDENCIES_VAR _weatherwar_resolved
     UNRESOLVED_DEPENDENCIES_VAR _weatherwar_unresolved
     PRE_EXCLUDE_REGEXES

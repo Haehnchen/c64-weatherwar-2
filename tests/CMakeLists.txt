@@ -63,7 +63,11 @@ add_tool_test(integration/native_regression check_regression.py
 set_tests_properties(integration/audio_transitions integration/native_regression
     PROPERTIES TIMEOUT 180)
 
-foreach(script IN ITEMS test_setup_audio test_check_scene_audio test_package_linux)
+set(_weatherwar_tool_tests test_setup_audio test_check_scene_audio)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    list(APPEND _weatherwar_tool_tests test_package_linux)
+endif()
+foreach(script IN LISTS _weatherwar_tool_tests)
     string(REGEX REPLACE "^test_" "" name "${script}")
     add_test(NAME "tools/${name}" COMMAND "${Python3_EXECUTABLE}"
         "${CMAKE_CURRENT_SOURCE_DIR}/tools/${script}.py")
